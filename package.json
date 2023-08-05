@@ -6,6 +6,7 @@
   "scripts": {
     "watch": "env-cmd -f .env.development node server/index.js",
     "test:prod": "env-cmd -f .env node server/index.js",
+    "start": "node server/index.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
