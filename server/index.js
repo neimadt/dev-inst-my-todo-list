@@ -4,19 +4,20 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 
 
-const __dirname = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const __here = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.join(__here, '..');
 
 const PORT = process.env.PORT || 5173;
 
-async function createServer(
+const createServer = async (
     root = process.cwd(),
     isDev = process.env.NODE_ENV === 'development',
     hmrPort
-) {
+) => {
 
     console.log(isDev ? 'ENV DEVELOPMENT' : 'ENV PRODUCTION');
 
-    const app = express()
+    const app = express();
 
     let vite;
     if (isDev) {
@@ -53,9 +54,13 @@ async function createServer(
 
         app.get('/assets/*', async (req, res) => {
 
-            const targetPath = req.originalUrl.split('?')[0];
+            const splits = req.originalUrl.split('?');
 
-            res.status(200).sendFile(path.join(__dirname, 'dist', targetPath));
+            const targetPath = splits[0];
+
+            const filePath = path.join(__dirname, 'dist', targetPath);
+
+            res.status(200).sendFile(filePath);
         });
     }
 
@@ -72,7 +77,10 @@ async function createServer(
                 ? await vite.transformIndexHtml(req.originalUrl, baseHtml)
                 : baseHtml;
 
-            res.status(200).set({ 'Content-Type': 'text/html' }).end(transformedHtml);
+            res
+                .status(200)
+                .set({ 'Content-Type': 'text/html' })
+                .end(transformedHtml);
         }
         catch (e) {
 
@@ -84,14 +92,17 @@ async function createServer(
 
 
     return { app, vite };
-}
+};
 
 createServer()
     .then(({ app }) => {
 
-        return app.listen(PORT);
-    })
-    .then(() => {
+        return new Promise(resolve => {
 
-        console.log(`Server running => http://localhost:${PORT}`);
+            app.listen(PORT, resolve(PORT));
+        });
+    })
+    .then(port => {
+
+        console.log(`Server running => http://localhost:${port}`);
     });
